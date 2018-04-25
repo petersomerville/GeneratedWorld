@@ -1,5 +1,6 @@
 import django
 import apps.generated_world.models as m
+from django.db.models import Sum, Count
 
 django.setup()
 
@@ -90,8 +91,54 @@ def members_of(club):
         print('{} {} is a member of {}'.format(person.first, person.last, club))
 
 # 2-4 Finds all past addresses for a given person
-def my_past_addresses(person):
-    for 
+def my_past_addresses(person_id):
+    for person in m.Person.objects.filter(id=person_id):
+        print('{} {}'.format(person.first, person.last))
+        for address in m.Address.objects.filter(person__id=person_id):
+            if address.is_current == 0:
+                print('\t{}, {}, {}'.format(address.street, address.city.name, address.city.state.name))
+
+# 2-5 Finds all the companies for a given industry
+def cos_in_industry(industry):
+    for listing in m.Listing.objects.filter(industry=industry):
+        print('{} is in the {} industry:'.format(listing.company.name, format(industry)))
+
+# 2-6 Finds all the clubs for a given league
+def clubs_in_league(league_name):
+    for league in m.League.objects.filter(name = league_name):
+        print('{} has these teams:'.format(league.name))
+        for club in league.clubs.all():
+            print('\t{}'.format(club.name))
+
+# 2-7 Finds the state with the most number of cities
+def state_w_most_cities():
+    res = m.State.objects.values('name').annotate(Count('cities')).order_by('-cities__count')    
+    d = res[0]
+    print('\t{} has {} cities'.format(d['name'], d['cities__count']))
+# FYI: in this database every state has the same number of cities
+
+# 2-8 Finds the most populous state
+def state_w_most_people():
+    popstate = m.State.objects.values('name', 'cities__population').order_by('-cities__population')
+    state = popstate[0]
+    print('\t{} has {} people'.format(state['name'], state['cities__population']))
+ 
+# 2-9 Finds the total assets for a given industry
+def total_assets(industry):
+    listing_query = m.Listing.objects.filter(industry=industry).values('name').aggregate(Sum('company__total_assets'))
+
+# 2-10 Find the companies for a given industry after a certain date
+# 3-1 Returns the states in descending order by the number of cities they have
+# 3-2 Returns the clubs that have the most past memberships
+# 3-3 Returns the exchanges in descending order by the number of listings they have
+# 3-4 Returns the companies with the most number of departments
+# 3-5 Returns the cities with the most employed people
+# 3-6 Returns the most profitable industries
+# 3-7 Returns the leagues in order of past membership
+# 3-8 Returns the industries with the highest rate of unemployment
+# 3-9 Returns the cities with the most vacant addresses
+# 3-10 Returns the states in descending order by revenue
+
 
 # for club in m.Club.objects.all():
 #     print('{} --> \t{}'.format(club.league.name, club.name))
